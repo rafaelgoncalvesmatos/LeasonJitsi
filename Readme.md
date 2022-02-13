@@ -114,7 +114,6 @@ $ dpkg -i google-chrome-stable_current_amd64.deb
 $ sudo apt install -f
 ```
 
-
 ## Chrome driver
 
 Para instalação dele é bem simples, crie a estrutura de diretório:
@@ -156,29 +155,197 @@ $ sudo apt-get update
 $ sudo apt-get install jibri
 ```
 
+Liberando a porta de serviço:
+
+```md
+$ sudo ufw allow 5222/tcp
+```
+
 Adicionando o usuario jibri nos grupos, lembrando que é melhor executar, mesmo vc olhando que já foi adicionado:
 
 ```md
 $ sudo usermod -aG adm,audio,video,plugdev jibri
 ```
 
+Preparando o diretório que estará os videos gravados:
+
+```md
+$ mkdir /srv/recordings
+$ chown jibri:jibri /srv/recordings
+```
+
 Agora vamos seguir com os arquivos de configuração:
+
+```md
+$ sudo vim /etc/jitsi/jibri/jibri.conf
+
+jibri {
+  // A unique identifier for this Jibri
+  // TODO: eventually this will be required with no default
+  id = ""
+  // Whether or not Jibri should return to idle state after handling
+  // (successfully or unsuccessfully) a request.  A value of 'true'
+  // here means that a Jibri will NOT return back to the IDLE state
+  // and will need to be restarted in order to be used again.
+  single-use-mode = false
+  api {
+    http {
+      external-api-port = 2222
+      internal-api-port = 3333
+    }
+    xmpp {
+      // See example_xmpp_envs.conf for an example of what is expected here
+      environments = [
+	      {
+                name = "prod environment"
+                xmpp-server-hosts = ["nosso.dominio.app"]
+                xmpp-domain = "nosso.dominio.app"
+
+                control-muc {
+                    domain = "internal.auth.nosso.dominio.app"
+                    room-name = "JibriBrewery"
+                    nickname = "jibri-nickname"
+                }
+
+                control-login {
+                    domain = "auth.nosso.dominio.app"
+                    username = "jibri"
+                    password = "jibriauthpass"
+                }
+
+                call-login {
+                    domain = "recorder.nosso.dominio.app"
+                    username = "recorder"
+                    password = "jibrirecorderpass"
+                }
+
+                strip-from-room-domain = "conference."
+                usage-timeout = 0
+                trust-all-xmpp-certs = true
+            }]
+    }
+  }
+  recording {
+    recordings-directory = "/srv/recordings"
+    # TODO: make this an optional param and remove the default
+    finalize-script = "/path/to/finalize_recording.sh"
+  }
+  streaming {
+    // A list of regex patterns for allowed RTMP URLs.  The RTMP URL used
+    // when starting a stream must match at least one of the patterns in
+    // this list.
+    rtmp-allow-list = [
+      // By default, all services are allowed
+      ".*"
+    ]
+  }
+  chrome {
+    // The flags which will be passed to chromium when launching
+    flags = [
+      "--use-fake-ui-for-media-stream",
+      "--start-maximized",
+      "--kiosk",
+      "--enabled",
+      "--disable-infobars",
+      "--autoplay-policy=no-user-gesture-required"
+    ]
+  }
+  stats {
+    enable-stats-d = true
+  }
+  webhook {
+    // A list of subscribers interested in receiving webhook events
+    subscribers = []
+  }
+  jwt-info {
+    // The path to a .pem file which will be used to sign JWT tokens used in webhook
+    // requests.  If not set, no JWT will be added to webhook requests.
+    # signing-key-path = "/path/to/key.pem"
+
+    // The kid to use as part of the JWT
+    # kid = "key-id"
+
+    // The issuer of the JWT
+    # issuer = "issuer"
+
+    // The audience of the JWT
+    # audience = "audience"
+
+    // The TTL of each generated JWT.  Can't be less than 10 minutes.
+    # ttl = 1 hour
+  }
+  call-status-checks {
+    // If all clients have their audio and video muted and if Jibri does not
+    // detect any data stream (audio or video) comming in, it will stop
+    // recording after NO_MEDIA_TIMEOUT expires.
+    no-media-timeout = 30 seconds
+
+    // If all clients have their audio and video muted, Jibri consideres this
+    // as an empty call and stops the recording after ALL_MUTED_TIMEOUT expires.
+    all-muted-timeout = 10 minutes
+
+    // When detecting if a call is empty, Jibri takes into consideration for how
+    // long the call has been empty already. If it has been empty for more than
+    // DEFAULT_CALL_EMPTY_TIMEOUT, it will consider it empty and stop the recording.
+    default-call-empty-timeout = 30 seconds
+  }
+}
+
+```
 
 ### Prosody
 
 Criando os usuários:
 
 ```md
-$ prosodyctl register jibri auth.pocconferencia.eurekadigital.app jibriauthpass
-$ prosodyctl register recorder recorder.pocconferencia.eurekadigital.app  jibrirecorderpass
+$ prosodyctl register jibri auth.nosso.dominio.app jibriauthpass
+$ prosodyctl register recorder recorder.nosso.dominio.app  jibrirecorderpass
+```
+
+Configurando e criando uma MUC interna e o VirtualHost, Componentes, no final do arquivo:
+
+```md
+$ sudo vim /etc/prosody/conf.d/nosso.dominio.app.cfg.lua
+
+-- Jibri
+
+Component "internal.auth.nosso.dominio.app" "muc"
+    modules_enabled = {
+      "ping";
+    }
+    -- storage should be "none" for prosody 0.10 and "memory" for prosody 0.11
+    storage = "none"
+    muc_room_cache_size = 1000
+
+VirtualHost "recorder.nosso.dominio.app"
+  modules_enabled = {
+    "ping";
+  }
+  authentication = "internal_plain"    
+
 ```
 
 ### Jicofo
 
-Para configuração do Jicofo:
+Para configuração do Jicofo é preciso adicionar o tempo que ele irá esperar, duas ultimas linhas:
 
 ```md
+$ vim /etc/jitsi/jicofo/sip-communicator.properties
+org.jitsi.jicofo.BRIDGE_MUC=JvbBrewery@internal.auth.nosso.dominio.app
+org.jitsi.jicofo.jibri.BREWERY=JibriBrewery@internal.auth.nosso.dominio.app
+org.jitsi.jicofo.jibri.PENDING_TIMEOUT=90
+```
 
+### Jitsi Meet
+
+Nesta reta final será preciso apenas habilitar o frontend para ter a opção de recording e liveness habilitada:
+
+```md
+$ sudo vim /etc/jitsi/meet/nosso.dominio.app
+
+fileRecordingsEnabled: true, // If you want to enable file recording
+liveStreamingEnabled: true, // If you want to enable live streaming
+hiddenDomain: 'recorder.yourdomain.com', // Esta opcao é adicionada
 ```
 
 ### Referenica Sites
