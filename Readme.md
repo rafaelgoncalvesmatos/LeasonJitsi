@@ -1,12 +1,14 @@
 # Jitsi 
 
-Jitsi é uma plataforma de video conferencia com diversos recursos que poderá ser implementado para conferencia no dia a dia.
+Jitsi é uma plataforma de video conferencia com diversos recursos que poderá ser implementado como uma robusta opção de conferencia corporativa.
 
 ## Proposito
 
 Está documentação é um guia que poderá ser usado no curso, mas tudos isso poderá ser configurado de forma modular.
 
 ## Instalação
+
+....
 
 # Jibri
 
@@ -44,7 +46,7 @@ Selecione o kernel que deseja carregar:
 ```md 
 $ sudo grub-set-default 9
 $ sudo update-grub2
-$ sudo grub-reboot 3
+$ sudo grub-reboot 9
 $ sudo reboot
 ```
 
@@ -92,8 +94,92 @@ $ sudo echo "snd-aloop" >> /etc/modules
 Este é o final da parte de kernel e módulo.
 
 ## Chrome stable
+
+Neste servidor será instalado o google chrome stable e a parte gráfica para funcionalidade da gravação, importando a chave GPG do repositório, configurando repositório e instalando:
+
+```md
+$ curl https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo sh -c 'gpg --dearmor > /usr/share/keyrings/google-chrome-keyring.gpg'
+
+$ echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+
+$ sudo apt-get -y update
+$ sudo apt-get -y install google-chrome-stable
+```
+
+Ou instalando desta forma, caso o exemplo acima tenha dificuldade:
+
+```md 
+$ wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+$ dpkg -i google-chrome-stable_current_amd64.deb
+$ sudo apt install -f
+```
+
+
 ## Chrome driver
 
+Para instalação dele é bem simples, crie a estrutura de diretório:
+
+```md
+$ mkdir -p /etc/opt/chrome/policies/managed
+$ echo '{ "CommandLineFlagSecurityWarningsEnabled": false }' >>/etc/opt/chrome/policies/managed/managed_policies.json
+$ CHROME_DRIVER_VERSION=`curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE`
+$ wget -N http://chromedriver.storage.googleapis.com/$CHROME_DRIVER_VERSION/chromedriver_linux64.zip -P ~/
+```
+
+E é preciso fazer a instalação do unzip no ubuntu e descompactar o arquivo e jogar no diretorio de binarios:
+
+```md
+$ sudo apt install unzip
+$ sudo unzip ~/chromedriver_linux64.zip -d ~/
+$ sudo mv -f ~/chromedriver /usr/local/bin/chromedriver
+$ sudo chown root:root /usr/local/bin/chromedriver
+$ sudo chmod 0755 /usr/local/bin/chromedriver
+
+```
+
+### Outras Dependencias
+
+Para instalação de outras dependencias neste servidor:
+
+```md
+$ sudo apt-get install default-jre-headless ffmpeg curl alsa-utils icewm xdotool xserver-xorg-video-dummy ruby-hocon
+```
+
+### Instalando o Jibri
+
+Para instalação vamos configurar o repositorio e logo após o pacote jibri:
+
+```md
+$ curl https://download.jitsi.org/jitsi-key.gpg.key | sudo sh -c 'gpg --dearmor > /usr/share/keyrings/jitsi-keyring.gpg'
+$ cho 'deb [signed-by=/usr/share/keyrings/jitsi-keyring.gpg] https://download.jitsi.org stable/' | sudo tee /etc/apt/sources.list.d/jitsi-stable.list > /dev/null
+$ sudo apt-get update
+$ sudo apt-get install jibri
+```
+
+Adicionando o usuario jibri nos grupos, lembrando que é melhor executar, mesmo vc olhando que já foi adicionado:
+
+```md
+$ sudo usermod -aG adm,audio,video,plugdev jibri
+```
+
+Agora vamos seguir com os arquivos de configuração:
+
+### Prosody
+
+Criando os usuários:
+
+```md
+$ prosodyctl register jibri auth.pocconferencia.eurekadigital.app jibriauthpass
+$ prosodyctl register recorder recorder.pocconferencia.eurekadigital.app  jibrirecorderpass
+```
+
+### Jicofo
+
+Para configuração do Jicofo:
+
+```md
+
+```
 
 ### Referenica Sites
 
