@@ -89,6 +89,8 @@ $ sudo modprobe snd-aloop
 $ sudo echo "snd-aloop" >> /etc/modules
 ```
 
+Este é o final da parte de kernel e módulo.
+
 ## Chrome stable
 ## Chrome driver
 
