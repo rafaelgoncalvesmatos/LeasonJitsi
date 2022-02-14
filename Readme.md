@@ -14,6 +14,7 @@ Arquitetura do Jitsi
 6. Integração com dropbox
 7. Integração com AWS S3 ( bucket )
 8. Integração com Azure StorageAccount ( blob )
+    * [em prograsso]
 9. Automação do ambiente
 
 ## Livros
