@@ -119,8 +119,8 @@ $ sudo apt install -f
 Para instalação dele é bem simples, crie a estrutura de diretório:
 
 ```md
-$ mkdir -p /etc/opt/chrome/policies/managed
-$ echo '{ "CommandLineFlagSecurityWarningsEnabled": false }' >>/etc/opt/chrome/policies/managed/managed_policies.json
+$ sudo mkdir -p /etc/opt/chrome/policies/managed
+$ sudo echo '{ "CommandLineFlagSecurityWarningsEnabled": false }' >>/etc/opt/chrome/policies/managed/managed_policies.json
 $ CHROME_DRIVER_VERSION=`curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE`
 $ wget -N http://chromedriver.storage.googleapis.com/$CHROME_DRIVER_VERSION/chromedriver_linux64.zip -P ~/
 ```
