@@ -341,7 +341,7 @@ org.jitsi.jicofo.jibri.PENDING_TIMEOUT=90
 Nesta reta final será preciso apenas habilitar o frontend para ter a opção de recording e liveness habilitada:
 
 ```md
-$ sudo vim /etc/jitsi/meet/nosso.dominio.app
+$ sudo vim /etc/jitsi/meet/nosso.dominio.app.app-config.js
 
 fileRecordingsEnabled: true, // If you want to enable file recording
 liveStreamingEnabled: true, // If you want to enable live streaming
