@@ -293,6 +293,13 @@ jibri {
 
 ```
 
+Habilitando o serviço
+
+```md
+$ sudo systemctl restart jibri
+$ sudo systemctl enable jibri
+```
+
 ### Prosody
 
 Criando os usuários:
