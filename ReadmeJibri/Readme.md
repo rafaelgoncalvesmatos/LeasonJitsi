@@ -21,7 +21,7 @@ Este componente pode ser instalado e configurado no próprio servidor Jitsi ou e
 Para instalação do kernel na versão que estamos usando do Ubuntu 18:
 
 ```md
-sudo apt install linux-image-extra-virtual
+sudo apt install linux-image-extra-virtual linux-modules-extra-$(uname -r)
 ```
 
 Carregando o kernel no grub: 
