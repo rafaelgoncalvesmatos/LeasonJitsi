@@ -314,7 +314,7 @@ Component "internal.auth.nosso.dominio.app" "muc"
       "ping";
     }
     -- storage should be "none" for prosody 0.10 and "memory" for prosody 0.11
-    storage = "none"
+    storage = "memory"
     muc_room_cache_size = 1000
 
 VirtualHost "recorder.nosso.dominio.app"
